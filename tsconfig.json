@@ -3,8 +3,11 @@
     "rootDir": ".",
     "outDir": "dist",
     "declaration": true,
-    "target": "es2020",
-    "module": "es2020",
+    //    "target": "es2020",
+    //    "module": "es2020",
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": ["ESNext", "DOM"],
     "strict": true,
     "esModuleInterop": true,
     "allowJs": false,
@@ -25,5 +28,11 @@
     "importsNotUsedAsValues": "error"
   },
   "include": ["packages", "internal", "examples/mercurius"],
-  "exclude": ["**/dist", "**/test", "**/website", "**/docs-website"]
+  "exclude": [
+    "**/dist",
+    "**/test",
+    "**/website",
+    "**/docs-website",
+    "**/disabled"
+  ]
 }
