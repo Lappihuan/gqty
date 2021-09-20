@@ -1,5 +1,4 @@
 import type { CreateVueClientOptions, VueClientDefaults } from './client';
-import { readonly, ref } from 'vue-demi';
 
 export function areArraysEqual(
   a: unknown[] | null | undefined,
@@ -21,21 +20,3 @@ export type VueClientOptionsWithDefaults = Omit<
 > & {
   defaults: Required<VueClientDefaults>;
 };
-
-export function useReducer(reducer: any, initialArg: any, init?: any) {
-  const state = ref(init ? init(initialArg) : initialArg);
-  const dispatch = (action: any) => {
-    state.value = reducer(state.value, action);
-  };
-
-  return [readonly(state), dispatch];
-}
-
-export function useState(initialState: any) {
-  const state = ref(initialState);
-  const setState = (newState: any) => {
-    state.value = newState;
-  };
-
-  return [readonly(state), setState];
-}

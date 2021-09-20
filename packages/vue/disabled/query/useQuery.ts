@@ -16,6 +16,7 @@ export interface UseQueryPrepareHelpers<
   readonly prepass: typeof prepass;
   readonly query: GeneratedSchema['query'];
 }
+
 export interface UseQueryOptions<
   GeneratedSchema extends {
     query: object;
@@ -38,6 +39,7 @@ export type UseQueryReturnValue<GeneratedSchema extends { query: object }> =
   GeneratedSchema['query'] & {
     $state: UseQueryState;
   };
+
 export interface UseQuery<GeneratedSchema extends { query: object }> {
   (
     options?: UseQueryOptions<GeneratedSchema>

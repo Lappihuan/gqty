@@ -26,146 +26,142 @@ import type { Scheduler } from 'gqty/Scheduler';
 //   useRef,
 //   useState,
 // } from 'react';
-import type { Ref, ComputedRef } from 'vue-demi';
-import { ref, computed, watchEffect } from 'vue-demi';
+import type { Ref } from 'vue-demi';
 import {
-  // MutableRefObject,
-  // useCallback,
-  // useEffect,
-  // useLayoutEffect,
-  // useMemo,
-  useReducer,
-  // useRef,
-  useState,
-} from './utils';
+  ref,
+  getCurrentInstance,
+  onUnmounted,
+  // triggerRef
+} from 'vue-demi';
 
-export function useOnFirstMount(fn: () => void) {
-  const isFirstMount = ref(true);
-  if (isFirstMount.value) {
-    isFirstMount.value = false;
-    fn();
-  }
-}
+// export function useOnFirstMount(fn: () => void) {
+//     const isFirstMount = ref(true);
+//     if (isFirstMount.value) {
+//         isFirstMount.value = false;
+//         fn();
+//     }
+// }
 
 // export const IS_BROWSER = typeof window !== 'undefined';
 
-export const useIsomorphicLayoutEffect = watchEffect;
+// export const useIsomorphicLayoutEffect = watchEffect;
 // export const useIsomorphicLayoutEffect = IS_BROWSER
 //   ? useLayoutEffect
 //   : watch;
 
-const updateReducer = (num: number): number => (num + 1) % 1_000_000;
+// const updateReducer = (num: number): number => (num + 1) % 1_000_000;
+//
+// export function useForceUpdate({
+//                                    doTimeout,
+//                                }: { doTimeout?: boolean } = {}): ComputedRef {
+//     const [, update] = useReducer(updateReducer, 0);
+//
+//     const wasCalled = ref(false);
+//
+//     watchEffect(() => {
+//         wasCalled.value = false;
+//     });
+//
+//     return computed(() => {
+//         return Object.assign(
+//             () => {
+//                 if (wasCalled.value) return;
+//                 wasCalled.value = true;
+//                 if (doTimeout) {
+//                     setTimeout(update, 0);
+//                 } else {
+//                     Promise.resolve().then(update);
+//                 }
+//             },
+//             {
+//                 wasCalled,
+//             },
+//         );
+//     });
+// }
 
-export function useForceUpdate({
-  doTimeout,
-}: { doTimeout?: boolean } = {}): ComputedRef {
-  const [, update] = useReducer(updateReducer, 0);
+// const InitSymbol: any = Symbol();
 
-  const wasCalled = ref(false);
+// export function useLazyRef<T>(initialValFunc: () => T) {
+//     const localRef: Ref<T> = ref(InitSymbol);
+//     if (localRef.value === InitSymbol) {
+//         localRef.value = initialValFunc();
+//     }
+//     return localRef;
+// }
 
-  watchEffect(() => {
-    wasCalled.value = false;
-  });
+// export const useUpdateEffect: (effect: any) => void = (effect) => {
+//     const firstEffectCall = ref(true);
+//
+//     watchEffect(() => {
+//         if (firstEffectCall.value) {
+//             firstEffectCall.value = false;
+//         } else
+//             return effect(() => {
+//                 console.log('ode: test update effect');
+//             });
+//     });
+// };
 
-  return computed(() => {
-    return Object.assign(
-      () => {
-        if (wasCalled.value) return;
-        wasCalled.value = true;
-        if (doTimeout) {
-          setTimeout(update, 0);
-        } else {
-          Promise.resolve().then(update);
-        }
-      },
-      {
-        wasCalled,
-      }
-    );
-  });
-}
-
-const InitSymbol: any = Symbol();
-
-export function useLazyRef<T>(initialValFunc: () => T) {
-  const localRef: Ref<T> = ref(InitSymbol);
-  if (localRef.value === InitSymbol) {
-    localRef.value = initialValFunc();
-  }
-  return localRef;
-}
-
-export const useUpdateEffect: (effect: any) => void = (effect) => {
-  const firstEffectCall = ref(true);
-
-  watchEffect(() => {
-    if (firstEffectCall.value) {
-      firstEffectCall.value = false;
-    } else
-      return effect(() => {
-        console.log('ode: test update effect');
-      });
-  });
-};
-
-export function useIsRendering() {
-  const isRendering = ref(true);
-  isRendering.value = true;
-
-  useIsomorphicLayoutEffect(() => {
-    isRendering.value = false;
-  });
-
-  return isRendering;
-}
-
-export function useIsMounted() {
-  const isMounted = ref(true);
-
-  useIsomorphicLayoutEffect(() => {
-    isMounted.value = true;
-
-    return () => {
-      isMounted.value = false;
-    };
-  });
-
-  return isMounted;
-}
+// export function useIsRendering() {
+//     const isRendering = ref(true);
+//     isRendering.value = true;
+//
+//     useIsomorphicLayoutEffect(() => {
+//         isRendering.value = false;
+//     });
+//
+//     return isRendering;
+// }
+//
+// export function useIsMounted() {
+//     const isMounted = ref(true);
+//
+//     useIsomorphicLayoutEffect(() => {
+//         isMounted.value = true;
+//
+//         return () => {
+//             isMounted.value = false;
+//         };
+//     });
+//
+//     return isMounted;
+// }
 
 // export function useDeferDispatch(
-//   dispatchFn: ComputedRef,
+//     dispatchFn: Ref,
 // ) {
-//   const isMounted = useIsMounted();
-//   const isRendering = useIsRendering();
-//
-//   const pendingDispatch = ref<Array<() => void> | false>(false);
-//
-//   watchEffect(() => {
-//     if (pendingDispatch.value) {
-//       for (const fn of pendingDispatch.value) {
-//         fn();
-//       }
-//       pendingDispatch.value = false;
+//     const instance = getCurrentInstance()
+//     if (!instance) {
+//         throw new Error('getCurrentTracking must be used during a component setup')
 //     }
-//   });
 //
-//   return (...args: any[]) => {
-//       if (isRendering.value) {
-//         if (pendingDispatch.value) {
-//           pendingDispatch.value.push(() => {
-//             if (isMounted.value) dispatchFn(...args);
-//           });
-//         }
-//         pendingDispatch.value = [
-//           () => {
-//             if (isMounted.value) dispatchFn(...args);
-//           },
-//         ];
-//       } else if (isMounted.value) {
-//         dispatchFn(...args);
-//       }
-//     }
+//     triggerRef(dispatchFn);
+//     // const pendingDispatch = ref<Array<() => void> | false>(false);
+//     //
+//     // if (pendingDispatch.value) {
+//     //     for (const fn of pendingDispatch.value) {
+//     //         fn();
+//     //     }
+//     //     pendingDispatch.value = false;
+//     // }
+//     //
+//     // return (...args: any[]) => {
+//     //     if (isRendering.value) {
+//     //         if (pendingDispatch.value) {
+//     //             pendingDispatch.value.push(() => {
+//     //                 if (isMounted.value) dispatchFn(...args);
+//     //             });
+//     //         }
+//     //         pendingDispatch.value = [
+//     //             () => {
+//     //                 if (isMounted.value) dispatchFn(...args);
+//     //             },
+//     //         ];
+//     //     } else if (isMounted.value) {
+//     //         dispatchFn(...args);
+//     //     }
+//     // };
 // }
 
 export type FetchPolicy =
@@ -210,8 +206,8 @@ export function useBuildSelections(
   getProxySelection: (proxy: ProxyAccessor) => Selection | undefined,
   caller: Function
 ) {
-  const buildSelections = (selectionsSet: Set<Selection>) => {
-    selectionsSet.clear();
+  const buildSelections = (selectionsSet: Ref<Set<Selection>>) => {
+    selectionsSet.value.clear();
 
     if (!argSelections) return;
 
@@ -219,11 +215,11 @@ export function useBuildSelections(
       for (const filterValue of argSelections) {
         let selection: Selection | undefined;
         if (filterValue instanceof Selection) {
-          selectionsSet.add(filterValue);
+          selectionsSet.value.add(filterValue);
         } else if ((selection = getProxySelection(filterValue))) {
-          selectionsSet.add(selection);
+          selectionsSet.value.add(selection);
         } else if (Array.isArray(filterValue)) {
-          selectionsSet.add(buildSelection(...filterValue));
+          selectionsSet.value.add(buildSelection(...filterValue));
         }
       }
     } catch (err) {
@@ -235,17 +231,9 @@ export function useBuildSelections(
     }
   };
 
-  const [selections] = useState(() => {
-    const selectionsSet = new Set<Selection>();
+  const selections = ref(new Set<Selection>());
 
-    buildSelections(selectionsSet);
-
-    return selectionsSet;
-  });
-
-  useUpdateEffect(() => {
-    buildSelections(selections);
-  });
+  buildSelections(selections);
 
   return {
     selections,
@@ -299,15 +287,15 @@ export function isAnySelectionIncludedInMatrix(
   return false;
 }
 
-function initSelectionsState() {
-  return new Set<Selection>();
-}
-
-export function useSelectionsState() {
-  const [selections] = useState(initSelectionsState);
-
-  return selections;
-}
+// function initSelectionsState() {
+//     return ref(new Set<Selection>());
+// }
+//
+// export function useSelectionsState() {
+//     const [selections] = useState(initSelectionsState);
+//
+//     return selections;
+// }
 
 export function useSubscribeCacheChanges({
   hookSelections,
@@ -315,57 +303,51 @@ export function useSubscribeCacheChanges({
   onChange,
   shouldSubscribe = true,
 }: {
-  hookSelections: Set<Selection>;
+  hookSelections: Ref<Set<Selection>>;
   eventHandler: EventHandler;
   onChange: () => void;
   shouldSubscribe?: boolean;
 }) {
-  const onChangeCalled = ref(false);
-  useIsomorphicLayoutEffect(() => {
-    onChangeCalled.value = false;
-  });
+  let onChangeCalled = false;
 
-  useIsomorphicLayoutEffect(() => {
-    if (!shouldSubscribe) return;
+  if (!shouldSubscribe) return;
 
-    let isMounted = true;
-    const unsubscribeFetch = eventHandler.onFetchSubscribe(
-      (fetchPromise, promiseSelections) => {
-        if (
-          onChangeCalled.value ||
-          !promiseSelections.some((selection) => hookSelections.has(selection))
-        ) {
-          return;
-        }
-
-        onChangeCalled.value = true;
-        fetchPromise.then(
-          () => {
-            if (isMounted) Promise.resolve(fetchPromise).then(onChange);
-          },
-          () => {}
-        );
+  const unsubscribeFetch = eventHandler.onFetchSubscribe(
+    (fetchPromise, promiseSelections) => {
+      if (
+        onChangeCalled ||
+        !promiseSelections.some((selection) =>
+          hookSelections.value.has(selection)
+        )
+      ) {
+        return;
       }
-    );
 
-    const unsubscribeCache = eventHandler.onCacheChangeSubscribe(
-      ({ selection }) => {
-        if (
-          isMounted &&
-          !onChangeCalled.value &&
-          hookSelections.has(selection)
-        ) {
-          onChangeCalled.value = true;
-          Promise.resolve().then(onChange);
-        }
+      onChangeCalled = true;
+      fetchPromise.then(
+        () => {
+          Promise.resolve(fetchPromise).then(onChange);
+        },
+        () => {}
+      );
+    }
+  );
+
+  const unsubscribeCache = eventHandler.onCacheChangeSubscribe(
+    ({ selection }) => {
+      if (!onChangeCalled && hookSelections.value.has(selection)) {
+        onChangeCalled = true;
+        Promise.resolve().then(onChange);
       }
-    );
+    }
+  );
 
-    return () => {
-      isMounted = false;
+  onUnmounted(() => {
+    const instance = getCurrentInstance();
+    if (instance) {
       unsubscribeFetch();
       unsubscribeCache();
-    };
+    }
   });
 }
 
@@ -396,7 +378,7 @@ export function useInterceptSelections({
   onError: OnErrorHandler | undefined;
   // updateOnFetchPromise?: boolean;
 }) {
-  const hookSelections = useSelectionsState();
+  const hookSelections = ref(new Set<Selection>());
   // const forceUpdate = useDeferDispatch(useForceUpdate());
   const fetchingPromise = ref<Promise<void> | null>(null);
 
@@ -411,33 +393,29 @@ export function useInterceptSelections({
   interceptor.selectionCacheRefetchListeners.add((selection) => {
     if (cacheRefetchSelections) cacheRefetchSelections.add(selection);
 
-    hookSelections.add(selection);
+    hookSelections.value.add(selection);
   });
 
-  useIsomorphicLayoutEffect(() => {
-    if (enabledStaleWhileRevalidate && cacheRefetchSelections?.size) {
-      for (const selection of cacheRefetchSelections) {
-        globalInterceptor.addSelectionCacheRefetch(selection);
-      }
+  if (enabledStaleWhileRevalidate && cacheRefetchSelections?.size) {
+    for (const selection of cacheRefetchSelections) {
+      globalInterceptor.addSelectionCacheRefetch(selection);
     }
-  });
+  }
 
   interceptor.selectionAddListeners.add((selection) => {
-    hookSelections.add(selection);
+    hookSelections.value.add(selection);
   });
 
   interceptor.selectionCacheListeners.add((selection) => {
-    hookSelections.add(selection);
+    hookSelections.value.add(selection);
   });
 
   const deferredCall = ref<(() => void) | null>(null);
 
-  watchEffect(() => {
-    if (deferredCall.value) {
-      deferredCall.value();
-      deferredCall.value = null;
-    }
-  });
+  if (deferredCall.value) {
+    deferredCall.value();
+    deferredCall.value = null;
+  }
 
   // const isRendering = useIsRendering();
 
@@ -446,7 +424,7 @@ export function useInterceptSelections({
       if (
         fetchingPromise.value === null &&
         deferredCall.value === null &&
-        hookSelections.has(selection)
+        hookSelections.value.has(selection)
       ) {
         const newPromise = new Promise<void>((resolve) => {
           promise.then(({ error }) => {
@@ -462,12 +440,12 @@ export function useInterceptSelections({
         fetchingPromise.value = newPromise;
 
         // if (updateOnFetchPromise) {
-        //   if (enabledStaleWhileRevalidate && isRendering.value) {
-        //     // deferredCall.value = forceUpdate;
-        //   } else {
-        //     deferredCall.value = null;
-        //     forceUpdate();
-        //   }
+        //     if (enabledStaleWhileRevalidate && isRendering.value) {
+        //         // deferredCall.value = forceUpdate;
+        //     } else {
+        //         deferredCall.value = null;
+        //         forceUpdate();
+        //     }
         // }
       }
     }
@@ -571,30 +549,20 @@ export function sortBy<TNode>(
   return orderedList;
 }
 
-export const useIsWindowVisible = ({ lazy }: { lazy?: boolean } = {}) => {
-  const [isVisible, setIsVisible] = useState(true);
-  const localRef = ref(true);
+export const useIsWindowVisible = () => {
+  const isVisible = ref(true);
 
-  watchEffect(() => {
-    const onVisibilityChange = () => {
-      const isVisible = document.visibilityState === 'visible';
-      localRef.value = isVisible;
-      !lazy && setIsVisible(isVisible);
-    };
+  const onVisibilityChange = () => {
+    isVisible.value = document.visibilityState === 'visible';
+  };
 
-    onVisibilityChange();
+  onVisibilityChange();
 
-    document.addEventListener('visibilitychange', onVisibilityChange);
+  document.addEventListener('visibilitychange', onVisibilityChange);
 
-    return () => {
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-    };
+  onUnmounted(() => {
+    document.removeEventListener('visibilitychange', onVisibilityChange);
   });
 
-  return computed(() => {
-    return {
-      isVisible,
-      localRef,
-    };
-  });
+  return isVisible;
 };

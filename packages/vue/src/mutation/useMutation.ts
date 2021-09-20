@@ -1,8 +1,8 @@
 import { doRetry, GQtyClient, GQtyError, RetryOptions } from 'gqty';
 
 // import { Dispatch, useCallback, useRef } from 'react';
-import { useReducer } from '../utils';
-import { computed, ref } from 'vue-demi';
+import { ref } from 'vue-demi';
+import type { Ref } from 'vue-demi';
 
 import type {
   OnErrorHandler,
@@ -12,8 +12,8 @@ import type {
 import type { VueClientOptionsWithDefaults } from '../utils';
 
 export interface UseMutationOptions<TData> {
-  noCache?: boolean;
-  onCompleted?: (data: TData) => void;
+  noCache?: Ref<boolean>;
+  onCompleted?: (data: Ref<TData | undefined>) => void;
   onError?: OnErrorHandler;
   /**
    * Retry behaviour
@@ -45,50 +45,50 @@ export interface UseMutationOptions<TData> {
 }
 
 export interface UseMutationState<TData> {
-  data: TData | undefined;
-  error?: GQtyError;
-  isLoading: boolean;
+  data: Ref<TData | undefined>;
+  error: Ref<GQtyError | null>;
+  isLoading: Ref<boolean>;
 }
 
-type UseMutationReducerAction<TData> =
-  | { type: 'success'; data: TData }
-  | { type: 'failure'; error: GQtyError }
-  | { type: 'loading' };
+// type UseMutationReducerAction<TData> =
+//     | { type: 'success'; data: TData }
+//     | { type: 'failure'; error: GQtyError }
+//     | { type: 'loading' };
 
-function UseMutationReducer<TData>(
-  state: UseMutationState<TData>,
-  action: UseMutationReducerAction<TData>
-): UseMutationState<TData> {
-  switch (action.type) {
-    case 'loading': {
-      if (state.isLoading) return state;
-      return {
-        data: state.data,
-        isLoading: true,
-      };
-    }
-    case 'success': {
-      return {
-        data: action.data,
-        isLoading: false,
-      };
-    }
-    case 'failure': {
-      return {
-        data: state.data,
-        isLoading: false,
-        error: action.error,
-      };
-    }
-  }
-}
+// function UseMutationReducer<TData>(
+//     state: UseMutationState<TData>,
+//     action: UseMutationReducerAction<TData>,
+// ): UseMutationState<TData> {
+//     switch (action.type) {
+//         case 'loading': {
+//             if (state.isLoading) return state;
+//             return {
+//                 data: state.data,
+//                 isLoading: true,
+//             };
+//         }
+//         case 'success': {
+//             return {
+//                 data: action.data,
+//                 isLoading: false,
+//             };
+//         }
+//         case 'failure': {
+//             return {
+//                 data: state.data,
+//                 isLoading: false,
+//                 error: action.error,
+//             };
+//         }
+//     }
+// }
 
-function InitUseMutationReducer<TData>(): UseMutationState<TData> {
-  return {
-    data: undefined,
-    isLoading: false,
-  };
-}
+// function InitUseMutationReducer<TData>(): UseMutationState<TData> {
+//     return {
+//         data: ref(undefined),
+//         isLoading: ref(false),
+//     };
+// }
 
 export interface UseMutation<
   GeneratedSchema extends {
@@ -132,9 +132,7 @@ export function createUseMutation<
   }
 >(
   client: GQtyClient<GeneratedSchema>,
-  {
-    defaults: { mutationSuspense: defaultSuspense },
-  }: VueClientOptionsWithDefaults
+  { defaults: {} }: VueClientOptionsWithDefaults
 ) {
   const { resolved, refetch } = client;
   const clientMutation: GeneratedSchema['mutation'] = client.mutation;
@@ -156,20 +154,21 @@ export function createUseMutation<
     UseMutationState<TData>
   ] {
     const optsRef = ref(opts);
-    optsRef.value = Object.assign({}, opts);
-    optsRef.value.suspense ??= defaultSuspense;
+    // optsRef.value = Object.assign({}, opts);
 
     // const setSuspensePromise = useSuspensePromise(optsRef);
-
-    const [state] = useReducer(
-      UseMutationReducer,
-      undefined,
-      InitUseMutationReducer
-    ) as [UseMutationState<TData>, UseMutationReducerAction<TData>];
+    const data = ref(undefined) as Ref<TData | undefined>;
+    const error = ref(null) as Ref<GQtyError | null>;
+    const isLoading = ref(false) as Ref<boolean>;
+    // const [state] = useReducer(
+    //     UseMutationReducer,
+    //     undefined,
+    //     InitUseMutationReducer,
+    // ) as [UseMutationState<TData>, UseMutationReducerAction<TData>];
     // const dispatch = useDeferDispatch(dispatchReducer);
 
     const fnRef = ref(mutationFn);
-    fnRef.value = mutationFn;
+    // fnRef.value = mutationFn;
 
     const callRefetchQueries = (): Promise<unknown> | void => {
       const { refetchQueries, awaitRefetchQueries } = optsRef.value;
@@ -179,6 +178,8 @@ export function createUseMutation<
           refetchQueries.map((v: any) => refetch(v))
         ).catch((err) => {
           console.log(err);
+          isLoading.value = false;
+          error.value = GQtyError.create(err, useMutation);
           // dispatch({
           //   type: 'failure',
           //   error: GQtyError.create(err, useMutation),
@@ -194,8 +195,9 @@ export function createUseMutation<
       args,
     }: { fn?: typeof mutationFn; args?: any } = {}) {
       // dispatch({ type: 'loading' });
-
+      isLoading.value = true;
       const refFn = fnRef.value;
+      console.log('refFn:', refFn);
 
       const functionResolve = fnArg
         ? () => fnArg(clientMutation, args)
@@ -209,31 +211,40 @@ export function createUseMutation<
               }
             );
           })();
-
+      console.log('functionResolve:', functionResolve);
+      console.log('clientMutation: ', clientMutation);
+      console.log('test');
       return resolved<TData>(functionResolve, {
         noCache: optsRef.value.noCache,
         refetch: true,
         nonSerializableVariables: optsRef.value.nonSerializableVariables,
       }).then(
-        async (data) => {
+        async (tdata) => {
+          console.log('tdata: ', tdata);
           const refetchingQueries = callRefetchQueries();
           if (refetchingQueries) await refetchingQueries;
 
-          optsRef.value.onCompleted?.(data);
           // dispatch({
           //   type: 'success',
           //   data,
+          data.value = tdata;
           // });
+          optsRef.value.onCompleted?.(data);
+          isLoading.value = false;
 
-          return data;
+          return tdata;
         },
         (err: unknown) => {
-          const error = GQtyError.create(err, useMutation);
-          optsRef.value.onError?.(error);
+          console.log('err: ', err);
+          const gqtyerror = GQtyError.create(err, useMutation);
+          console.log('error: ', gqtyerror);
+          optsRef.value.onError?.(gqtyerror);
           // dispatch({
           //   type: 'failure',
           //   error,
           // });
+          isLoading.value = false;
+          error.value = gqtyerror;
 
           throw error;
         }
@@ -242,31 +253,38 @@ export function createUseMutation<
 
     const { retry = false } = opts;
 
-    const fn = computed(() => {
-      const localFn: typeof mutate = retry
-        ? (...args: any[]) => {
-            const promise = mutate(...args).catch((err) => {
-              doRetry(retry, {
-                onRetry: () => {
-                  const promise = mutate(...args).then(() => {});
+    const fn: typeof mutate = retry
+      ? (...args: any[]) => {
+          console.log('test2');
+          console.log('mutate: ', mutate);
+          const promise = mutate(...args).catch((err) => {
+            doRetry(retry, {
+              onRetry: () => {
+                const promise = mutate(...args).then(() => {});
 
-                  // setSuspensePromise(promise);
+                // setSuspensePromise(promise);
 
-                  return promise;
-                },
-              });
-
-              throw err;
+                return promise;
+              },
             });
 
-            // setSuspensePromise(promise);
+            throw err;
+          });
 
-            return promise;
-          }
-        : mutate;
-      return localFn;
-    });
-    return [fn.value, state];
+          // setSuspensePromise(promise);
+
+          return promise;
+        }
+      : mutate;
+
+    return [
+      fn,
+      {
+        data,
+        error,
+        isLoading,
+      },
+    ];
     // , [state, mutate, retry, optsRef, setSuspensePromise]);
   };
 

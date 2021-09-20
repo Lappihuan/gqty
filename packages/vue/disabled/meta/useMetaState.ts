@@ -1,6 +1,7 @@
 import type { GQtyClient, GQtyError, Selection } from 'packages/gqty';
-import type { SchedulerPromiseValue } from 'gqty/Scheduler';
+import type { SchedulerPromiseValue } from '../../../gqty/src/Scheduler';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { getCurrentInstance, onUnmounted } from 'vue-demi';
 
 import {
   BuildSelections,
@@ -8,7 +9,6 @@ import {
   isAnySelectionIncludedInMatrix,
   isSelectionIncluded,
   useBuildSelections,
-  useIsomorphicLayoutEffect,
 } from '../../src/common';
 import { areArraysEqual } from '../../src/utils';
 
@@ -99,7 +99,7 @@ export function createUseMetaState(client: GQtyClient<any>) {
         if (hasFilterSelections) {
           const errorsSet = new Set<GQtyError>();
 
-          selectionsToFilter.forEach((selection) => {
+          selectionsToFilter.forEach((selection: Selection) => {
             const error = errorsMap.get(selection);
 
             if (error) errorsSet.add(error);
@@ -115,26 +115,25 @@ export function createUseMetaState(client: GQtyClient<any>) {
       [hasFilterSelections, selectionsToFilter]
     );
 
-    const setStateIfChanged = useCallback(
-      function setStateIfChanged(isMounted: { current: boolean }) {
-        if (!isMounted.current) return;
+    const setStateIfChanged = function setStateIfChanged(isMounted: {
+      current: boolean;
+    }) {
+      if (!isMounted.current) return;
 
-        const prevState = stateRef.current;
+      const prevState = stateRef.current;
 
-        const newState = getState(isMounted);
+      const newState = getState(isMounted);
 
-        if (
-          prevState.isFetching !== newState.isFetching ||
-          !areArraysEqual(prevState.errors, newState.errors)
-        ) {
-          stateRef.current = newState;
-          setTimeout(() => {
-            if (isMounted.current) setState(newState);
-          }, 0);
-        }
-      },
-      []
-    );
+      if (
+        prevState.isFetching !== newState.isFetching ||
+        !areArraysEqual(prevState.errors, newState.errors)
+      ) {
+        stateRef.current = newState;
+        setTimeout(() => {
+          if (isMounted.current) setState(newState);
+        }, 0);
+      }
+    };
 
     const [state, setState] = useState(getState);
 
@@ -225,6 +224,14 @@ export function createUseMetaState(client: GQtyClient<any>) {
         }
 
         setStateIfChanged(isMounted);
+      });
+
+      onUnmounted(() => {
+        const instance = getCurrentInstance();
+        if (instance) {
+          unsubscribeIsFetching();
+          unsubscribeErrors();
+        }
       });
 
       return () => {
