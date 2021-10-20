@@ -24,8 +24,8 @@ import {
   useSubscribeCacheChanges,
   // useSuspensePromise,
   useUpdateEffect,
-} from '../../src/common';
-import type { VueClientOptionsWithDefaults } from '../../src/utils';
+} from '../common';
+import type { VueClientOptionsWithDefaults } from '../utils';
 
 export interface UseTransactionQueryState<TData> {
   data: TData | undefined;

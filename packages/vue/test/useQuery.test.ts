@@ -1,46 +1,46 @@
 // import { renderHook } from '@testing-library/vue';
-//
-// import { createReactTestClient } from './utils';
-//
-// test('Basic Non-Suspense', async () => {
-//   const { useQuery } = await createReactTestClient();
-//
-//   const { result, waitFor } = renderHook(() => {
-//     const query = useQuery({
-//       suspense: false,
-//     });
-//
-//     return {
-//       hello: query.hello,
-//       $state: query.$state,
-//     };
-//   });
-//
-//   expect(result.current.hello).toBe(undefined);
-//
-//   await waitFor(() => result.current.$state.isLoading === true);
-//
-//   expect(result.current.hello).toBe(undefined);
-//
-//   await waitFor(() => result.current.$state.isLoading === false);
-//
-//   expect(result.current.hello).toBe('hello world');
-// });
-//
+import { mountComposition, nextTick } from 'vue-composition-test-utils';
+import flushPromises from 'flush-promises';
+
+import { sleep, createVueTestClient } from './utils';
+
+test('Basic Non-Suspense', async () => {
+  const { useQuery } = await createVueTestClient();
+
+  const { result } = mountComposition(useQuery, {
+    component: {
+      template: '<span>hello world {{result.current.hello}}</span>',
+    },
+  });
+
+  console.log(result.current.value);
+
+  expect(result.current.value.hello).toBe(undefined);
+
+  // await waitFor(() => result.current.$state.isLoading === true);
+  await flushPromises();
+
+  expect(result.current.value.hello).toBe(undefined);
+
+  // await waitFor(() => result.current.$state.isLoading === false);
+  await flushPromises();
+  await sleep(4);
+
+  expect(result.current.value.hello).toBe('hello world');
+});
+
 // test('Basic Suspense', async () => {
-//   const { useQuery } = await createReactTestClient();
+//   const { useQuery } = await createVueTestClient();
 //
-//   const { result, waitForNextUpdate } = renderHook(() => {
-//     const query = useQuery({
-//       suspense: true,
-//     });
-//
-//     return query.hello;
+//   const { result } = mountComposition(useQuery, {
+//     component: {
+//       template: 'hello world {{result.current.value.hello}}',
+//     }
 //   });
 //
 //   expect(result.current).toBe(undefined);
 //
-//   await waitForNextUpdate();
+//   await nextTick(()=>{});
 //
 //   expect(result.current).toBe('hello world');
 // });

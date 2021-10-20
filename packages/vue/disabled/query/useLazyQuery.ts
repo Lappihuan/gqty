@@ -8,8 +8,8 @@ import {
   OnErrorHandler,
   useDeferDispatch,
   // useSuspensePromise,
-} from '../../src/common';
-import type { VueClientOptionsWithDefaults } from '../../src/utils';
+} from '../common';
+import type { VueClientOptionsWithDefaults } from '../utils';
 
 export type LazyFetchPolicy = Exclude<FetchPolicy, 'cache-first'>;
 

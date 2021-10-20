@@ -77,7 +77,7 @@ export interface TestClientConfig {
   subscriptions?: boolean;
 }
 
-export const createReactTestClient = async (
+export const createVueTestClient = async (
   addedToGeneratedSchema?: DeepPartial<Schema>,
   queryFetcher?: QueryFetcher,
   config?: TestClientConfig,

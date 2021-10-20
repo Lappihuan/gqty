@@ -1,4 +1,4 @@
-// import { createUseMetaState, UseMetaState } from './meta/useMetaState';
+import { createUseMetaState, UseMetaState } from './meta/useMetaState';
 import { createUseMutation, UseMutation } from './mutation/useMutation';
 // import { createPrepareQuery, PrepareQuery } from './query/preparedQuery';
 // import {
@@ -6,7 +6,7 @@ import { createUseMutation, UseMutation } from './mutation/useMutation';
 //   LazyFetchPolicy,
 //   UseLazyQuery,
 // } from './query/useLazyQuery';
-// import { createUseQuery, UseQuery } from './query/useQuery';
+import { createUseQuery, UseQuery } from './query/useQuery';
 // import { createUseRefetch, UseRefetch } from './query/useRefetch';
 // import {
 //   createUseTransactionQuery,
@@ -166,7 +166,7 @@ export interface VueClient<
     subscription: object;
   }
 > {
-  // useQuery: UseQuery<GeneratedSchema>;
+  useQuery: UseQuery<GeneratedSchema>;
   // useRefetch: UseRefetch;
   // useLazyQuery: UseLazyQuery<GeneratedSchema>;
   // useTransactionQuery: UseTransactionQuery<GeneratedSchema>;
@@ -176,7 +176,7 @@ export interface VueClient<
   state: { isLoading: boolean };
   // prepareReactRender: PrepareReactRender;
   // useHydrateCache: UseHydrateCache;
-  // useMetaState: UseMetaState;
+  useMetaState: UseMetaState;
   // useSubscription: UseSubscription<GeneratedSchema>;
   // prepareQuery: PrepareQuery<GeneratedSchema>;
 }
@@ -245,7 +245,7 @@ export function createVueClient<
   // );
 
   return {
-    // useQuery: createUseQuery<GeneratedSchema>(client, opts),
+    useQuery: createUseQuery<GeneratedSchema>(client, opts),
     // useRefetch: createUseRefetch(client, opts),
     // useLazyQuery: createUseLazyQuery<GeneratedSchema>(client, opts),
     // useTransactionQuery: createUseTransactionQuery<GeneratedSchema>(
@@ -258,7 +258,8 @@ export function createVueClient<
     state,
     // prepareReactRender,
     // useHydrateCache,
-    // useMetaState: createUseMetaState(client),
+    // @ts-ignore
+    useMetaState: createUseMetaState(client),
     // useSubscription: createUseSubscription<GeneratedSchema>(client, opts),
     // prepareQuery: createPrepareQuery<GeneratedSchema>(client, opts),
   };

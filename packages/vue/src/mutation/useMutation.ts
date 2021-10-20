@@ -34,7 +34,7 @@ export interface UseMutationOptions<TData> {
   /**
    * Enable suspense behavior
    */
-  suspense?: boolean;
+  // suspense?: boolean;
   /**
    * Activate special handling of non-serializable variables,
    * for example, files uploading

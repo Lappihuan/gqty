@@ -27,12 +27,7 @@ import type { Scheduler } from 'gqty/Scheduler';
 //   useState,
 // } from 'react';
 import type { Ref } from 'vue-demi';
-import {
-  ref,
-  getCurrentInstance,
-  onUnmounted,
-  // triggerRef
-} from 'vue-demi';
+import { ref, getCurrentInstance, onUnmounted, triggerRef } from 'vue-demi';
 
 // export function useOnFirstMount(fn: () => void) {
 //     const isFirstMount = ref(true);
@@ -368,15 +363,17 @@ export function useInterceptSelections({
   staleWhileRevalidate = false,
   scheduler,
   eventHandler,
+  query,
   onError,
-}: // updateOnFetchPromise,
-{
+  updateOnFetchPromise,
+}: {
   staleWhileRevalidate: boolean | object | number | string | null;
   interceptorManager: InterceptorManager;
   scheduler: Scheduler;
   eventHandler: EventHandler;
+  query: Ref;
   onError: OnErrorHandler | undefined;
-  // updateOnFetchPromise?: boolean;
+  updateOnFetchPromise?: boolean;
 }) {
   const hookSelections = ref(new Set<Selection>());
   // const forceUpdate = useDeferDispatch(useForceUpdate());
@@ -417,6 +414,16 @@ export function useInterceptSelections({
     deferredCall.value = null;
   }
 
+  const onUpdate = () => {
+    console.log('beforeTrigger promise:', fetchingPromise.value);
+    console.log('beforeTrigger:', query);
+    if (!fetchingPromise.value) {
+      triggerRef(query);
+    }
+    console.log('afterTrigger promise:', fetchingPromise.value);
+    console.log('afterTrigger:', query);
+  };
+
   // const isRendering = useIsRendering();
 
   const unsubscribeResolve = scheduler.subscribeResolve(
@@ -431,7 +438,7 @@ export function useInterceptSelections({
             fetchingPromise.value = null;
             if (error && onError) onError(error);
 
-            // Promise.resolve().then(forceUpdate);
+            Promise.resolve().then(onUpdate);
 
             resolve();
           });
@@ -439,14 +446,14 @@ export function useInterceptSelections({
 
         fetchingPromise.value = newPromise;
 
-        // if (updateOnFetchPromise) {
-        //     if (enabledStaleWhileRevalidate && isRendering.value) {
-        //         // deferredCall.value = forceUpdate;
-        //     } else {
-        //         deferredCall.value = null;
-        //         forceUpdate();
-        //     }
-        // }
+        if (updateOnFetchPromise) {
+          if (enabledStaleWhileRevalidate) {
+            deferredCall.value = onUpdate;
+          } else {
+            deferredCall.value = null;
+            onUpdate();
+          }
+        }
       }
     }
   );
@@ -462,7 +469,7 @@ export function useInterceptSelections({
     hookSelections,
     eventHandler,
     onChange() {
-      // if (!fetchingPromise.value) forceUpdate();
+      if (!fetchingPromise.value) onUpdate();
     },
   });
 

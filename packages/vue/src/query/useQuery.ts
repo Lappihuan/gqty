@@ -1,12 +1,19 @@
-import { GQtyClient, prepass } from 'packages/gqty';
-import { useMemo, useState } from 'react';
+import { GQtyClient, prepass } from 'gqty';
+// import { useMemo, useState } from 'react';
+import type { Ref } from 'vue-demi';
 
 import {
   OnErrorHandler,
   useInterceptSelections,
-  useIsomorphicLayoutEffect,
+  // useIsomorphicLayoutEffect,
 } from '../common';
 import type { VueClientOptionsWithDefaults } from '../utils';
+import {
+  // computed,
+  getCurrentInstance,
+  onUnmounted,
+  shallowRef,
+} from 'vue-demi';
 
 export interface UseQueryPrepareHelpers<
   GeneratedSchema extends {
@@ -22,28 +29,19 @@ export interface UseQueryOptions<
     query: object;
   } = never
 > {
-  suspense?: boolean;
+  // suspense?: boolean;
   staleWhileRevalidate?: boolean | object | number | string | null;
   onError?: OnErrorHandler;
   prepare?: (helpers: UseQueryPrepareHelpers<GeneratedSchema>) => void;
 }
 
-export interface UseQueryState {
-  /**
-   * Useful for `Non-Suspense` usage.
-   */
-  readonly isLoading: boolean;
-}
-
 export type UseQueryReturnValue<GeneratedSchema extends { query: object }> =
-  GeneratedSchema['query'] & {
-    $state: UseQueryState;
-  };
+  GeneratedSchema['query'] & {};
 
 export interface UseQuery<GeneratedSchema extends { query: object }> {
-  (
-    options?: UseQueryOptions<GeneratedSchema>
-  ): UseQueryReturnValue<GeneratedSchema>;
+  (options?: UseQueryOptions<GeneratedSchema>): Ref<
+    UseQueryReturnValue<GeneratedSchema>
+  >;
 }
 
 export function createUseQuery<
@@ -54,39 +52,44 @@ export function createUseQuery<
   }
 >(client: GQtyClient<GeneratedSchema>, opts: VueClientOptionsWithDefaults) {
   const {
-    suspense: defaultSuspense,
+    // suspense: defaultSuspense,
     staleWhileRevalidate: defaultStaleWhileRevalidate,
   } = opts.defaults;
   const { scheduler, eventHandler, interceptorManager } = client;
 
   const clientQuery: GeneratedSchema['query'] = client.query;
+  const query = shallowRef(clientQuery);
 
   const prepareHelpers: UseQueryPrepareHelpers<GeneratedSchema> = {
     prepass,
     query: clientQuery,
   };
 
-  type Writeable<T> = { -readonly [P in keyof T]: T[P] };
-
   const useQuery: UseQuery<GeneratedSchema> = function useQuery({
-    suspense = defaultSuspense,
+    // suspense = defaultSuspense,
     staleWhileRevalidate = defaultStaleWhileRevalidate,
     onError,
     prepare,
-  }: UseQueryOptions<GeneratedSchema> = {}): UseQueryReturnValue<GeneratedSchema> {
-    const [$state] = useState<Writeable<UseQueryState>>(() => {
-      return {
-        isLoading: true,
-      };
-    });
+  }: UseQueryOptions<GeneratedSchema> = {}): Ref<
+    UseQueryReturnValue<GeneratedSchema>
+  > {
     const { unsubscribe, fetchingPromise } = useInterceptSelections({
       staleWhileRevalidate,
       eventHandler,
       interceptorManager,
       scheduler,
+      onUpdate() {
+        console.log(fetchingPromise.value);
+        if (!fetchingPromise.value) {
+          triggerRef(query);
+        }
+        console.log(query.value.hello);
+      },
       onError,
       updateOnFetchPromise: true,
     });
+
+    // const isLoading = computed(() => fetchingPromise.value !== null)
 
     if (prepare) {
       try {
@@ -99,41 +102,14 @@ export function createUseQuery<
       }
     }
 
-    useIsomorphicLayoutEffect(unsubscribe);
+    onUnmounted(() => {
+      const instance = getCurrentInstance();
+      if (instance) {
+        unsubscribe();
+      }
+    });
 
-    if (fetchingPromise.current) {
-      $state.isLoading = true;
-
-      if (suspense) throw fetchingPromise.current;
-    } else {
-      $state.isLoading = false;
-    }
-
-    return useMemo<UseQueryReturnValue<GeneratedSchema>>(() => {
-      const gqtyProxy = Symbol('gqty-proxy');
-      return new Proxy(
-        Object.keys(clientQuery).reduce(
-          (acum, value) => {
-            //@ts-expect-error
-            acum[value] = gqtyProxy;
-            return acum;
-          },
-          {
-            $state,
-          }
-        ),
-        {
-          set(_t, key, value) {
-            return Reflect.set(clientQuery, key, value);
-          },
-          get(_t, key) {
-            if (key === '$state') return $state;
-
-            return Reflect.get(clientQuery, key);
-          },
-        }
-      );
-    }, [$state]);
+    return query;
   };
 
   return useQuery;

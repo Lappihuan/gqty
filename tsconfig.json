@@ -3,8 +3,6 @@
     "rootDir": ".",
     "outDir": "dist",
     "declaration": true,
-    //    "target": "es2020",
-    //    "module": "es2020",
     "target": "ESNext",
     "module": "ESNext",
     "lib": ["ESNext", "DOM"],

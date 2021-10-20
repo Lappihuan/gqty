@@ -8,8 +8,8 @@ import {
 } from 'packages/gqty';
 import { useCallback, useMemo, useReducer, useRef, useState } from 'react';
 
-import { useIsomorphicLayoutEffect, useLazyRef } from '../../src/common';
-import type { VueClientOptionsWithDefaults } from '../../src/utils';
+import { useIsomorphicLayoutEffect, useLazyRef } from '../common';
+import type { VueClientOptionsWithDefaults } from '../utils';
 
 function initSelectionsState() {
   return new Set<Selection>();
