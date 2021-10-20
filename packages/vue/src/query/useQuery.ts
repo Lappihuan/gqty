@@ -73,18 +73,12 @@ export function createUseQuery<
   }: UseQueryOptions<GeneratedSchema> = {}): Ref<
     UseQueryReturnValue<GeneratedSchema>
   > {
-    const { unsubscribe, fetchingPromise } = useInterceptSelections({
+    const { unsubscribe } = useInterceptSelections({
       staleWhileRevalidate,
       eventHandler,
       interceptorManager,
       scheduler,
-      onUpdate() {
-        console.log(fetchingPromise.value);
-        if (!fetchingPromise.value) {
-          triggerRef(query);
-        }
-        console.log(query.value.hello);
-      },
+      query,
       onError,
       updateOnFetchPromise: true,
     });
