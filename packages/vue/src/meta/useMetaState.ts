@@ -1,4 +1,4 @@
-import type { GQtyClient, GQtyError, Selection } from 'packages/gqty';
+import type { GQtyClient, GQtyError, Selection } from 'gqty';
 import type { SchedulerPromiseValue } from 'gqty/Scheduler';
 // import { useCallback, useEffect, useRef, useState } from 'react';
 import { getCurrentInstance, onUnmounted, ref } from 'vue-demi';
