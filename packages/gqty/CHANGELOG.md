@@ -1,5 +1,51 @@
 # gqty
 
+## 2.0.3
+
+### Patch Changes
+
+- 9e22119: Fix unions/interface fetch loop
+
+  closes #236
+
+## 2.0.2
+
+### Patch Changes
+
+- d014462: remove unused dependency
+- 6b60991: improve normalization key auto-fetch logic
+- 5cc001f: Fix: Prevent duplicated concurrent scheduler fetch
+- d6da2ae: `Variables`/`Args` utility type to re-use variables types from any field with arguments.
+
+  You can use either `Variables` or `Args`.
+
+  ```ts
+  import { query, Query } from '../gqty';
+
+  import type { Variables, Args } from 'gqty';
+
+  function getUserName(args: Variables<Query['user']>) {
+    return query.user(args).name;
+  }
+
+  function getUserEmail(args: Args<typeof query['user']>) {
+    return query.user(args).email;
+  }
+  ```
+
+## 2.0.1
+
+### Patch Changes
+
+- 28e2c09: [Bug fixing breaking change] Fix types and retrieval of unions/interfaces of different object types
+
+## 2.0.0
+
+### Major Changes
+
+- 3586c45: Remove undocumented "buildSelections"
+- 3586c45: Change previous unstable `Unions` support with new `"$on"` property with support for both `Unions` & `Interfaces`
+
 ## 1.1.3
 
 ### Patch Changes

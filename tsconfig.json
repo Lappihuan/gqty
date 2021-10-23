@@ -3,9 +3,8 @@
     "rootDir": ".",
     "outDir": "dist",
     "declaration": true,
-    "target": "ESNext",
-    "module": "ESNext",
-    "lib": ["ESNext", "DOM"],
+    "target": "es2020",
+    "module": "es2020",
     "strict": true,
     "esModuleInterop": true,
     "allowJs": false,
@@ -21,11 +20,12 @@
       "gqty": ["packages/gqty/src/index.ts"],
       "gqty/*": ["packages/gqty/src/*"],
       "@gqty/cli": ["packages/cli/src/index.ts"],
-      "@gqty/cli/*": ["packages/cli/src/*"]
+      "@gqty/cli/*": ["packages/cli/src/*"],
+      "test-utils": ["internal/test-utils/src/index.ts"]
     },
     "importsNotUsedAsValues": "error"
   },
-  "include": ["packages", "internal", "examples/mercurius"],
+  "include": ["packages", "internal"],
   "exclude": [
     "**/dist",
     "**/test",

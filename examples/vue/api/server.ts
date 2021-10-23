@@ -1,29 +1,23 @@
 import Fastify from 'fastify';
-import ms from 'ms';
 // import FastifyNext from 'fastify-nextjs';
-// import { resolve } from 'path';
-import mercuriusUpload from 'mercurius-upload';
-import AltairFastify from 'altair-fastify-plugin';
-
-import { register } from './graphql';
+import ms from 'ms';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
+import { buildApp } from './graphql';
 
 const app = Fastify({
   logger: true,
   pluginTimeout: ms('60 seconds'),
 });
 
-app.register(AltairFastify);
-
-app.register(mercuriusUpload, {});
-
-register(app).catch(console.error);
+app.register(buildApp().fastifyPlugin);
 
 console.log('> Vue example API server started.');
 
 // app
 //   .register(FastifyNext, {
 //     logLevel: 'error',
-//     dir: resolve(__dirname, '../'),
+//     dir: resolve(dirname(fileURLToPath(import.meta.url)), '../'),
 //   })
 //   .then(() => {
 //     if (!app.next) {

@@ -48,6 +48,21 @@ export function createQueryBuilder() {
     const variableTypes: Record<string, string> = {};
     const variablesMapKeyValue: Record<string, unknown> = {};
 
+    if (normalization) {
+      const selectionsSet = new Set<Selection>();
+
+      for (const selection of selections) {
+        if (selection.cofetchSelections) {
+          for (const coFetchSelection of selection.cofetchSelections) {
+            selectionsSet.add(coFetchSelection);
+          }
+        }
+
+        selectionsSet.add(selection);
+      }
+      selections = selectionsSet;
+    }
+
     let builtQuery: BuiltQuery | undefined;
     let idAcum = '';
 
@@ -66,6 +81,8 @@ export function createQueryBuilder() {
       ) {
         return selections.reduce(
           (acum, { args, alias, key, argTypes, unions }, index) => {
+            if (key === '$on') return acum;
+
             const argsLength = args ? Object.keys(args).length : 0;
 
             const selectionKey = alias ? alias + ':' + key : key;
@@ -176,7 +193,8 @@ export function createQueryBuilder() {
     builtQuery = {
       query,
       variables,
-      cacheKey: query + (variables ? serializeVariables(variables) : ''),
+      cacheKey:
+        idAcum || query + (variables ? serializeVariables(variables) : ''),
     };
 
     if (isGlobalCache) queryCache[idAcum] = builtQuery;

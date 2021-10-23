@@ -1,10 +1,10 @@
 {
   "name": "@gqty/cli",
-  "version": "1.1.4",
+  "version": "2.1.2",
   "homepage": "https://gqty.dev",
   "repository": {
     "type": "git",
-    "url": "https://github.com/PabloSzx/gqty.git"
+    "url": "https://github.com/gqty-dev/gqty.git"
   },
   "license": "MIT",
   "author": "PabloSzx <pablosaez1995@gmail.com>",
@@ -41,36 +41,39 @@
     "test:watch-coverage": "rimraf coverage && mkdirp coverage/lcov-report && concurrently --raw \"jest --watchAll\" \"serve -l 8787 coverage/lcov-report\" \"wait-on tcp:8787 coverage/lcov-report/index.html && open-cli http://localhost:8787\""
   },
   "dependencies": {
-    "@graphql-codegen/core": "^2.1.0",
-    "@graphql-codegen/typescript": "^2.2.2",
-    "@graphql-tools/delegate": "^8.2.1",
-    "@graphql-tools/utils": "^8.2.2",
-    "@graphql-tools/wrap": "^8.1.0",
-    "commander": "^8.2.0",
+    "@graphql-codegen/core": "^2.2.0",
+    "@graphql-codegen/typescript": "^2.2.4",
+    "@graphql-tools/delegate": "^8.4.0",
+    "@graphql-tools/utils": "^8.5.0",
+    "@graphql-tools/wrap": "^8.3.0",
+    "commander": "^8.3.0",
     "cosmiconfig": "^7.0.1",
     "cross-fetch": "^3.1.4",
-    "gqty": "workspace:^1.1.3",
+    "gqty": "workspace:^2.0.3",
+    "lodash": "^4.17.21",
     "mkdirp": "^1.0.4",
     "prettier": "^2.4.1"
   },
   "devDependencies": {
-    "@size-limit/preset-small-lib": "^5.0.3",
+    "@size-limit/preset-small-lib": "^6.0.3",
+    "@types/lodash": "^4.14.176",
+    "@types/lodash.sortby": "^4.7.6",
     "@types/mkdirp": "^1.0.2",
-    "bob-esbuild-cli": "^1.0.1",
+    "bob-esbuild-cli": "^2.0.0",
     "changesets-github-release": "^0.0.4",
-    "graphql": "^15.5.3",
+    "graphql": "^15.6.1",
     "open-cli": "^7.0.1",
     "rimraf": "^3.0.2",
     "serve": "^12.0.1",
-    "size-limit": "^5.0.3",
+    "size-limit": "^6.0.3",
     "test-utils": "workspace:^0.1.0",
     "tmp-promise": "^3.0.2",
     "tslib": "^2.3.1",
-    "typescript": "^4.4.3",
+    "typescript": "^4.4.4",
     "wait-on": "^6.0.0"
   },
   "peerDependencies": {
-    "graphql": "^15.5.2"
+    "graphql": "*"
   },
   "peerDependenciesMeta": {
     "graphql": {

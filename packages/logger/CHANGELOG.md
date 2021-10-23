@@ -1,5 +1,24 @@
 # @gqty/logger
 
+## 2.0.1
+
+### Patch Changes
+
+- 7bc7c89: fix & simplify selections logging
+- Updated dependencies [d014462]
+- Updated dependencies [6b60991]
+- Updated dependencies [5cc001f]
+- Updated dependencies [d6da2ae]
+  - gqty@2.0.2
+
+## 2.0.0
+
+### Patch Changes
+
+- Updated dependencies [3586c45]
+- Updated dependencies [3586c45]
+  - gqty@2.0.0
+
 ## 1.0.4
 
 ### Patch Changes

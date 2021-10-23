@@ -1,27 +1,28 @@
 import fs from 'fs';
 import path from 'path';
-import { createTestApp } from 'test-utils';
-
+import { createTestApp, gql } from 'test-utils';
 import { writeGenerate } from '../src/writeGenerate';
 import { getTempDir } from './utils';
 
-const { server, isReady } = createTestApp({
-  schema: `
-    type Query {
+const testAppPromise = createTestApp({
+  schema: {
+    typeDefs: gql`
+      type Query {
         hello: String!
-    }
+      }
     `,
-  resolvers: {
-    Query: {
-      hello() {
-        return 'hello world';
+    resolvers: {
+      Query: {
+        hello() {
+          return 'hello world';
+        },
       },
     },
   },
 });
 
 beforeAll(async () => {
-  await isReady;
+  await testAppPromise;
 });
 
 test('generates code and writes existing file', async () => {
@@ -34,18 +35,26 @@ test('generates code and writes existing file', async () => {
 
     const firstStats = await fs.promises.stat(tempDir.schemaPath);
 
-    await writeGenerate(server.graphql.schema, tempDir.clientPath, {
-      preImport: shouldBeIncluded,
-    });
+    await writeGenerate(
+      (await testAppPromise).getEnveloped().schema,
+      tempDir.clientPath,
+      {
+        preImport: shouldBeIncluded,
+      }
+    );
 
     const secondStats = await fs.promises.stat(tempDir.schemaPath);
 
     expect(secondStats.mtimeMs).toBeGreaterThan(firstStats.mtimeMs);
 
     // If the code didn't change, it shouldn't write anything
-    await writeGenerate(server.graphql.schema, tempDir.clientPath, {
-      preImport: shouldBeIncluded,
-    });
+    await writeGenerate(
+      (await testAppPromise).getEnveloped().schema,
+      tempDir.clientPath,
+      {
+        preImport: shouldBeIncluded,
+      }
+    );
 
     const thirdStats = await fs.promises.stat(tempDir.schemaPath);
 
@@ -64,73 +73,73 @@ test('generates code and writes existing file', async () => {
     ).toBeTruthy();
 
     expect(generatedContent).toMatchInlineSnapshot(`
-"/**
- * GQTY AUTO-GENERATED CODE: PLEASE DO NOT MODIFY MANUALLY
- */
-// This should be included
+      "/**
+       * GQTY AUTO-GENERATED CODE: PLEASE DO NOT MODIFY MANUALLY
+       */
+      // This should be included
 
-export type Maybe<T> = T | null;
-export type Exact<T extends { [key: string]: unknown }> = {
-  [K in keyof T]: T[K];
-};
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
-  [SubKey in K]?: Maybe<T[SubKey]>;
-};
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
-  [SubKey in K]: Maybe<T[SubKey]>;
-};
-/** All built-in and custom scalars, mapped to their actual values */
-export interface Scalars {
-  ID: string;
-  String: string;
-  Boolean: boolean;
-  Int: number;
-  Float: number;
-}
+      export type Maybe<T> = T | null;
+      export type Exact<T extends { [key: string]: unknown }> = {
+        [K in keyof T]: T[K];
+      };
+      export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
+        [SubKey in K]?: Maybe<T[SubKey]>;
+      };
+      export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
+        [SubKey in K]: Maybe<T[SubKey]>;
+      };
+      /** All built-in and custom scalars, mapped to their actual values */
+      export interface Scalars {
+        ID: string;
+        String: string;
+        Boolean: boolean;
+        Int: number;
+        Float: number;
+      }
 
-export const scalarsEnumsHash: import('gqty').ScalarsEnumsHash = {
-  String: true,
-  Boolean: true,
-};
-export const generatedSchema = {
-  query: { __typename: { __type: 'String!' }, hello: { __type: 'String!' } },
-  mutation: {},
-  subscription: {},
-} as const;
+      export const scalarsEnumsHash: import('gqty').ScalarsEnumsHash = {
+        Boolean: true,
+        String: true,
+      };
+      export const generatedSchema = {
+        mutation: {},
+        query: { __typename: { __type: 'String!' }, hello: { __type: 'String!' } },
+        subscription: {},
+      } as const;
 
-export interface Query {
-  __typename?: 'Query';
-  hello: ScalarsEnums['String'];
-}
+      export interface Mutation {
+        __typename?: 'Mutation';
+      }
 
-export interface Mutation {
-  __typename?: 'Mutation';
-}
+      export interface Query {
+        __typename?: 'Query';
+        hello: ScalarsEnums['String'];
+      }
 
-export interface Subscription {
-  __typename?: 'Subscription';
-}
+      export interface Subscription {
+        __typename?: 'Subscription';
+      }
 
-export interface SchemaObjectTypes {
-  Query: Query;
-  Mutation: Mutation;
-  Subscription: Subscription;
-}
-export type SchemaObjectTypesNames = 'Query' | 'Mutation' | 'Subscription';
+      export interface SchemaObjectTypes {
+        Mutation: Mutation;
+        Query: Query;
+        Subscription: Subscription;
+      }
+      export type SchemaObjectTypesNames = 'Mutation' | 'Query' | 'Subscription';
 
-export interface GeneratedSchema {
-  query: Query;
-  mutation: Mutation;
-  subscription: Subscription;
-}
+      export interface GeneratedSchema {
+        query: Query;
+        mutation: Mutation;
+        subscription: Subscription;
+      }
 
-export type MakeNullable<T> = {
-  [K in keyof T]: T[K] | undefined;
-};
+      export type MakeNullable<T> = {
+        [K in keyof T]: T[K] | undefined;
+      };
 
-export interface ScalarsEnums extends MakeNullable<Scalars> {}
-"
-`);
+      export interface ScalarsEnums extends MakeNullable<Scalars> {}
+      "
+    `);
   } finally {
     await tempDir.cleanup();
   }
@@ -148,7 +157,7 @@ test('creates dir, generates code and writes new file', async () => {
     const shouldBeIncluded = '// This should be included';
 
     const destinationPath = await writeGenerate(
-      server.graphql.schema,
+      (await testAppPromise).getEnveloped().schema,
       targetPath,
       {
         preImport: shouldBeIncluded,
@@ -171,73 +180,73 @@ test('creates dir, generates code and writes new file', async () => {
     ).toBeTruthy();
 
     expect(generatedContentSchema).toMatchInlineSnapshot(`
-"/**
- * GQTY AUTO-GENERATED CODE: PLEASE DO NOT MODIFY MANUALLY
- */
-// This should be included
+      "/**
+       * GQTY AUTO-GENERATED CODE: PLEASE DO NOT MODIFY MANUALLY
+       */
+      // This should be included
 
-export type Maybe<T> = T | null;
-export type Exact<T extends { [key: string]: unknown }> = {
-  [K in keyof T]: T[K];
-};
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
-  [SubKey in K]?: Maybe<T[SubKey]>;
-};
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
-  [SubKey in K]: Maybe<T[SubKey]>;
-};
-/** All built-in and custom scalars, mapped to their actual values */
-export interface Scalars {
-  ID: string;
-  String: string;
-  Boolean: boolean;
-  Int: number;
-  Float: number;
-}
+      export type Maybe<T> = T | null;
+      export type Exact<T extends { [key: string]: unknown }> = {
+        [K in keyof T]: T[K];
+      };
+      export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
+        [SubKey in K]?: Maybe<T[SubKey]>;
+      };
+      export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
+        [SubKey in K]: Maybe<T[SubKey]>;
+      };
+      /** All built-in and custom scalars, mapped to their actual values */
+      export interface Scalars {
+        ID: string;
+        String: string;
+        Boolean: boolean;
+        Int: number;
+        Float: number;
+      }
 
-export const scalarsEnumsHash: import('gqty').ScalarsEnumsHash = {
-  String: true,
-  Boolean: true,
-};
-export const generatedSchema = {
-  query: { __typename: { __type: 'String!' }, hello: { __type: 'String!' } },
-  mutation: {},
-  subscription: {},
-} as const;
+      export const scalarsEnumsHash: import('gqty').ScalarsEnumsHash = {
+        Boolean: true,
+        String: true,
+      };
+      export const generatedSchema = {
+        mutation: {},
+        query: { __typename: { __type: 'String!' }, hello: { __type: 'String!' } },
+        subscription: {},
+      } as const;
 
-export interface Query {
-  __typename?: 'Query';
-  hello: ScalarsEnums['String'];
-}
+      export interface Mutation {
+        __typename?: 'Mutation';
+      }
 
-export interface Mutation {
-  __typename?: 'Mutation';
-}
+      export interface Query {
+        __typename?: 'Query';
+        hello: ScalarsEnums['String'];
+      }
 
-export interface Subscription {
-  __typename?: 'Subscription';
-}
+      export interface Subscription {
+        __typename?: 'Subscription';
+      }
 
-export interface SchemaObjectTypes {
-  Query: Query;
-  Mutation: Mutation;
-  Subscription: Subscription;
-}
-export type SchemaObjectTypesNames = 'Query' | 'Mutation' | 'Subscription';
+      export interface SchemaObjectTypes {
+        Mutation: Mutation;
+        Query: Query;
+        Subscription: Subscription;
+      }
+      export type SchemaObjectTypesNames = 'Mutation' | 'Query' | 'Subscription';
 
-export interface GeneratedSchema {
-  query: Query;
-  mutation: Mutation;
-  subscription: Subscription;
-}
+      export interface GeneratedSchema {
+        query: Query;
+        mutation: Mutation;
+        subscription: Subscription;
+      }
 
-export type MakeNullable<T> = {
-  [K in keyof T]: T[K] | undefined;
-};
+      export type MakeNullable<T> = {
+        [K in keyof T]: T[K] | undefined;
+      };
 
-export interface ScalarsEnums extends MakeNullable<Scalars> {}
-"
-`);
+      export interface ScalarsEnums extends MakeNullable<Scalars> {}
+      "
+    `);
 
     const generatedContentClient = await fs.promises.readFile(
       path.resolve(path.dirname(destinationPath), './file-to-generate.ts'),
@@ -253,14 +262,14 @@ export interface ScalarsEnums extends MakeNullable<Scalars> {}
 
       import { createReactClient } from '@gqty/react';
 
-      import { createClient, QueryFetcher } from 'gqty';
-      import {
-        generatedSchema,
-        scalarsEnumsHash,
+      import type { QueryFetcher } from 'gqty';
+      import { createClient } from 'gqty';
+      import type {
         GeneratedSchema,
         SchemaObjectTypes,
         SchemaObjectTypesNames,
       } from './schema.generated';
+      import { generatedSchema, scalarsEnumsHash } from './schema.generated';
 
       const queryFetcher: QueryFetcher = async function (query, variables) {
         // Modify \\"/api/graphql\\" if needed
@@ -339,7 +348,10 @@ test('generates code and writes existing file', async () => {
 
   try {
     try {
-      await writeGenerate(server.graphql.schema, tempDir.clientPath);
+      await writeGenerate(
+        (await testAppPromise).getEnveloped().schema,
+        tempDir.clientPath
+      );
 
       throw Error("shouldn't react");
     } catch (err: unknown) {

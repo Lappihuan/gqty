@@ -1,15 +1,12 @@
 import {
-  prepass,
-  getFields,
-  getArrayFields,
-  selectFields,
   castNotSkeleton,
   castNotSkeletonDeep,
-} from 'gqty';
-import {
-  BuildSelectionInput,
+  getArrayFields,
+  getFields,
   GQtyError,
+  prepass,
   ResolveOptions,
+  selectFields,
   Selection,
 } from 'gqty';
 import type { ProxyAccessor } from 'gqty/Cache';
@@ -193,11 +190,10 @@ export function fetchPolicyDefaultResolveOptions(
   }
 }
 
-export type BuildSelections<T> = (Selection | BuildSelectionInput | T)[];
+export type BuildSelections<T> = (Selection | T)[];
 
 export function useBuildSelections(
   argSelections: BuildSelections<never> | null | undefined,
-  buildSelection: (...args: BuildSelectionInput) => Selection,
   getProxySelection: (proxy: ProxyAccessor) => Selection | undefined,
   caller: Function
 ) {
@@ -213,8 +209,6 @@ export function useBuildSelections(
           selectionsSet.value.add(filterValue);
         } else if ((selection = getProxySelection(filterValue))) {
           selectionsSet.value.add(selection);
-        } else if (Array.isArray(filterValue)) {
-          selectionsSet.value.add(buildSelection(...filterValue));
         }
       }
     } catch (err) {
@@ -414,6 +408,7 @@ export function useInterceptSelections({
     deferredCall.value = null;
   }
 
+  //TODO: fix condition, shouldn't be inside funciton, probably just get rid of function
   const onUpdate = () => {
     console.log('beforeTrigger promise:', fetchingPromise.value);
     console.log('beforeTrigger:', query);

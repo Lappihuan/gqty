@@ -2,8 +2,7 @@
  * GQTY: You can safely modify this file and Query Fetcher based on your needs
  */
 
-import { createLogger } from '@gqty/logger';
-import { createVueClient } from '@gqty/vue';
+import { createSubscriptionsClient } from '@gqty/subscriptions';
 import { createClient, QueryFetcher } from 'gqty';
 import {
   generatedSchema,
@@ -13,27 +12,42 @@ import {
   SchemaObjectTypesNames,
 } from './schema.generated';
 
-const endpoint =
-  typeof window !== 'undefined'
-    ? '/api/graphql'
-    : 'http://localhost:4141/api/graphql';
-
 const queryFetcher: QueryFetcher = async function (query, variables) {
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      query,
-      variables,
-    }),
-  });
+  const response = await fetch(
+    typeof window === 'undefined'
+      ? 'http://localhost:4141/api/graphql'
+      : '/api/graphql',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query,
+        variables,
+      }),
+      mode: 'cors',
+    }
+  );
 
   const json = await response.json();
 
   return json;
 };
+
+const subscriptionsClient =
+  typeof window !== 'undefined'
+    ? createSubscriptionsClient({
+        wsEndpoint: () => {
+          // Modify if needed
+          const url = new URL('/api/graphql', window.location.href);
+          url.protocol = url.protocol.replace('http', 'ws');
+
+          console.log(42, url.href);
+          return url.href;
+        },
+      })
+    : undefined;
 
 export const client = createClient<
   GeneratedSchema,
@@ -43,13 +57,8 @@ export const client = createClient<
   schema: generatedSchema,
   scalarsEnumsHash,
   queryFetcher,
+  subscriptionsClient,
 });
-
-if (typeof window !== 'undefined') {
-  const logger = createLogger(client);
-
-  logger.start();
-}
 
 export const {
   query,
@@ -60,27 +69,5 @@ export const {
   refetch,
   track,
 } = client;
-
-export const {
-  // graphql,
-  useQuery,
-  // usePaginatedQuery,
-  // useTransactionQuery,
-  // useLazyQuery,
-  // useRefetch,
-  useMutation,
-  useMetaState,
-  // useHydrateCache,
-  // prepareQuery,
-} = createVueClient<GeneratedSchema>(client, {
-  defaults: {
-    // Set this flag as "true" if your usage involves Vue Suspense
-    // Keep in mind that you can overwrite it in a per-hook basis
-    // suspense: false,
-
-    // Set this flag based on your needs
-    staleWhileRevalidate: false,
-  },
-});
 
 export * from './schema.generated';

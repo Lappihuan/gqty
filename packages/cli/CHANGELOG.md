@@ -1,5 +1,48 @@
 # @gqty/cli
 
+## 2.1.2
+
+### Patch Changes
+
+- 2b33e6a: Add missing useSubscription in generated react code
+
+## 2.1.1
+
+### Patch Changes
+
+- f4ddac9: Enforce `"importsNotUsedAsValues"` & `"preserveValueImports"` using `import type`
+- ff821ef: default config react enabled only if "react" dependency is found
+
+## 2.1.0
+
+### Minor Changes
+
+- c993f2e: Sort alphabetically generated code
+
+### Patch Changes
+
+- 0a30558: Fix misplaced semi-colons in input types
+
+## 2.0.1
+
+### Patch Changes
+
+- 28e2c09: [Bug fixing breaking change] Fix types and retrieval of unions/interfaces of different object types
+- Updated dependencies [28e2c09]
+  - gqty@2.0.1
+
+## 2.0.0
+
+### Major Changes
+
+- 3586c45: Change previous unstable `Unions` support with new `"$on"` property with support for both `Unions` & `Interfaces`
+
+### Patch Changes
+
+- Updated dependencies [3586c45]
+- Updated dependencies [3586c45]
+  - gqty@2.0.0
+
 ## 1.1.4
 
 ### Patch Changes

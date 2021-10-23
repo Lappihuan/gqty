@@ -1,35 +1,40 @@
 import fs from 'fs';
-import { createTestApp } from 'test-utils';
+import {
+  BuildContextArgs,
+  createTestApp,
+  GetEnvelopedFn,
+  gql,
+} from 'test-utils';
 import tmp from 'tmp-promise';
-
 import { inspectWriteGenerate } from '../src/inspectWriteGenerate';
 import { getTempDir } from './utils';
 
 const { readFile } = fs.promises;
-const { server, isReady } = createTestApp({
-  schema: `
-    type Query {
+const testAppPromise = createTestApp({
+  schema: {
+    typeDefs: gql`
+      type Query {
         hello: String!
-    }
+      }
     `,
-  resolvers: {
-    Query: {
-      hello() {
-        return 'hello world';
+    resolvers: {
+      Query: {
+        hello() {
+          return 'hello world';
+        },
       },
     },
   },
 });
 
 let endpoint: string;
+let getEnveloped: GetEnvelopedFn<unknown>;
 beforeAll(async () => {
-  await isReady;
+  const testApp = await testAppPromise;
 
-  endpoint = (await server.listen(0)) + '/graphql';
-});
+  getEnveloped = testApp.getEnveloped;
 
-afterAll(async () => {
-  server.close();
+  endpoint = testApp.endpoint;
 });
 
 test('basic inspectWriteGenerate functionality', async () => {
@@ -54,14 +59,14 @@ test('basic inspectWriteGenerate functionality', async () => {
 
       import { createReactClient } from '@gqty/react';
 
-      import { createClient, QueryFetcher } from 'gqty';
-      import {
-        generatedSchema,
-        scalarsEnumsHash,
+      import type { QueryFetcher } from 'gqty';
+      import { createClient } from 'gqty';
+      import type {
         GeneratedSchema,
         SchemaObjectTypes,
         SchemaObjectTypesNames,
       } from './schema.generated';
+      import { generatedSchema, scalarsEnumsHash } from './schema.generated';
 
       const queryFetcher: QueryFetcher = async function (query, variables) {
         // Modify \\"/graphql\\" if needed
@@ -158,22 +163,22 @@ test('basic inspectWriteGenerate functionality', async () => {
       }
 
       export const scalarsEnumsHash: import('gqty').ScalarsEnumsHash = {
-        String: true,
         Boolean: true,
+        String: true,
       };
       export const generatedSchema = {
-        query: { __typename: { __type: 'String!' }, hello: { __type: 'String!' } },
         mutation: {},
+        query: { __typename: { __type: 'String!' }, hello: { __type: 'String!' } },
         subscription: {},
       } as const;
+
+      export interface Mutation {
+        __typename?: 'Mutation';
+      }
 
       export interface Query {
         __typename?: 'Query';
         hello: ScalarsEnums['String'];
-      }
-
-      export interface Mutation {
-        __typename?: 'Mutation';
       }
 
       export interface Subscription {
@@ -181,11 +186,11 @@ test('basic inspectWriteGenerate functionality', async () => {
       }
 
       export interface SchemaObjectTypes {
-        Query: Query;
         Mutation: Mutation;
+        Query: Query;
         Subscription: Subscription;
       }
-      export type SchemaObjectTypesNames = 'Query' | 'Mutation' | 'Subscription';
+      export type SchemaObjectTypesNames = 'Mutation' | 'Query' | 'Subscription';
 
       export interface GeneratedSchema {
         query: Query;
@@ -245,14 +250,14 @@ describe('from file', () => {
 
         import { createReactClient } from '@gqty/react';
 
-        import { createClient, QueryFetcher } from 'gqty';
-        import {
-          generatedSchema,
-          scalarsEnumsHash,
+        import type { QueryFetcher } from 'gqty';
+        import { createClient } from 'gqty';
+        import type {
           GeneratedSchema,
           SchemaObjectTypes,
           SchemaObjectTypesNames,
         } from './schema.generated';
+        import { generatedSchema, scalarsEnumsHash } from './schema.generated';
 
         const queryFetcher: QueryFetcher = async function (query, variables) {
           // Modify \\"/api/graphql\\" if needed
@@ -344,23 +349,23 @@ describe('from file', () => {
         }
 
         export const scalarsEnumsHash: import('gqty').ScalarsEnumsHash = {
-          Int: true,
           Boolean: true,
+          Int: true,
           String: true,
         };
         export const generatedSchema = {
-          query: { __typename: { __type: 'String!' }, hello: { __type: 'Int!' } },
           mutation: {},
+          query: { __typename: { __type: 'String!' }, hello: { __type: 'Int!' } },
           subscription: {},
         } as const;
+
+        export interface Mutation {
+          __typename?: 'Mutation';
+        }
 
         export interface Query {
           __typename?: 'Query';
           hello: ScalarsEnums['Int'];
-        }
-
-        export interface Mutation {
-          __typename?: 'Mutation';
         }
 
         export interface Subscription {
@@ -368,11 +373,11 @@ describe('from file', () => {
         }
 
         export interface SchemaObjectTypes {
-          Query: Query;
           Mutation: Mutation;
+          Query: Query;
           Subscription: Subscription;
         }
-        export type SchemaObjectTypesNames = 'Query' | 'Mutation' | 'Subscription';
+        export type SchemaObjectTypesNames = 'Mutation' | 'Query' | 'Subscription';
 
         export interface GeneratedSchema {
           query: Query;
@@ -404,7 +409,7 @@ describe('from file', () => {
       await fs.promises.writeFile(
         tempFile.path,
         JSON.stringify(
-          graphqlSync(server.graphql.schema, getIntrospectionQuery())
+          graphqlSync(getEnveloped().schema, getIntrospectionQuery())
         )
       );
 
@@ -433,14 +438,14 @@ describe('from file', () => {
 
         import { createReactClient } from '@gqty/react';
 
-        import { createClient, QueryFetcher } from 'gqty';
-        import {
-          generatedSchema,
-          scalarsEnumsHash,
+        import type { QueryFetcher } from 'gqty';
+        import { createClient } from 'gqty';
+        import type {
           GeneratedSchema,
           SchemaObjectTypes,
           SchemaObjectTypesNames,
         } from './schema.generated';
+        import { generatedSchema, scalarsEnumsHash } from './schema.generated';
 
         const queryFetcher: QueryFetcher = async function (query, variables) {
           // Modify \\"/api/graphql\\" if needed
@@ -532,22 +537,22 @@ describe('from file', () => {
         }
 
         export const scalarsEnumsHash: import('gqty').ScalarsEnumsHash = {
-          String: true,
           Boolean: true,
+          String: true,
         };
         export const generatedSchema = {
-          query: { __typename: { __type: 'String!' }, hello: { __type: 'String!' } },
           mutation: {},
+          query: { __typename: { __type: 'String!' }, hello: { __type: 'String!' } },
           subscription: {},
         } as const;
+
+        export interface Mutation {
+          __typename?: 'Mutation';
+        }
 
         export interface Query {
           __typename?: 'Query';
           hello: ScalarsEnums['String'];
-        }
-
-        export interface Mutation {
-          __typename?: 'Mutation';
         }
 
         export interface Subscription {
@@ -555,11 +560,11 @@ describe('from file', () => {
         }
 
         export interface SchemaObjectTypes {
-          Query: Query;
           Mutation: Mutation;
+          Query: Query;
           Subscription: Subscription;
         }
-        export type SchemaObjectTypesNames = 'Query' | 'Mutation' | 'Subscription';
+        export type SchemaObjectTypesNames = 'Mutation' | 'Query' | 'Subscription';
 
         export interface GeneratedSchema {
           query: Query;
@@ -591,7 +596,7 @@ describe('from file', () => {
       await fs.promises.writeFile(
         tempFile.path,
         JSON.stringify(
-          graphqlSync(server.graphql.schema, getIntrospectionQuery()).data
+          graphqlSync(getEnveloped().schema, getIntrospectionQuery()).data
         )
       );
 
@@ -620,14 +625,14 @@ describe('from file', () => {
 
         import { createReactClient } from '@gqty/react';
 
-        import { createClient, QueryFetcher } from 'gqty';
-        import {
-          generatedSchema,
-          scalarsEnumsHash,
+        import type { QueryFetcher } from 'gqty';
+        import { createClient } from 'gqty';
+        import type {
           GeneratedSchema,
           SchemaObjectTypes,
           SchemaObjectTypesNames,
         } from './schema.generated';
+        import { generatedSchema, scalarsEnumsHash } from './schema.generated';
 
         const queryFetcher: QueryFetcher = async function (query, variables) {
           // Modify \\"/api/graphql\\" if needed
@@ -719,22 +724,22 @@ describe('from file', () => {
         }
 
         export const scalarsEnumsHash: import('gqty').ScalarsEnumsHash = {
-          String: true,
           Boolean: true,
+          String: true,
         };
         export const generatedSchema = {
-          query: { __typename: { __type: 'String!' }, hello: { __type: 'String!' } },
           mutation: {},
+          query: { __typename: { __type: 'String!' }, hello: { __type: 'String!' } },
           subscription: {},
         } as const;
+
+        export interface Mutation {
+          __typename?: 'Mutation';
+        }
 
         export interface Query {
           __typename?: 'Query';
           hello: ScalarsEnums['String'];
-        }
-
-        export interface Mutation {
-          __typename?: 'Mutation';
         }
 
         export interface Subscription {
@@ -742,11 +747,11 @@ describe('from file', () => {
         }
 
         export interface SchemaObjectTypes {
-          Query: Query;
           Mutation: Mutation;
+          Query: Query;
           Subscription: Subscription;
         }
-        export type SchemaObjectTypesNames = 'Query' | 'Mutation' | 'Subscription';
+        export type SchemaObjectTypesNames = 'Mutation' | 'Query' | 'Subscription';
 
         export interface GeneratedSchema {
           query: Query;
@@ -844,14 +849,14 @@ test('specify generateOptions to inspectWriteGenerate', async () => {
 
       import { createReactClient } from '@gqty/react';
 
-      import { createClient, QueryFetcher } from 'gqty';
-      import {
-        generatedSchema,
-        scalarsEnumsHash,
+      import type { QueryFetcher } from 'gqty';
+      import { createClient } from 'gqty';
+      import type {
         GeneratedSchema,
         SchemaObjectTypes,
         SchemaObjectTypesNames,
       } from './schema.generated';
+      import { generatedSchema, scalarsEnumsHash } from './schema.generated';
 
       const queryFetcher: QueryFetcher = async function (query, variables) {
         // Modify \\"/graphql\\" if needed
@@ -945,22 +950,22 @@ test('specify generateOptions to inspectWriteGenerate', async () => {
       }
 
       export const scalarsEnumsHash: import('gqty').ScalarsEnumsHash = {
-        String: true,
         Boolean: true,
+        String: true,
       };
       export const generatedSchema = {
-        query: { __typename: { __type: 'String!' }, hello: { __type: 'String!' } },
         mutation: {},
+        query: { __typename: { __type: 'String!' }, hello: { __type: 'String!' } },
         subscription: {},
       } as const;
+
+      export interface Mutation {
+        __typename?: 'Mutation';
+      }
 
       export interface Query {
         __typename?: 'Query';
         hello: ScalarsEnums['String'];
-      }
-
-      export interface Mutation {
-        __typename?: 'Mutation';
       }
 
       export interface Subscription {
@@ -968,11 +973,11 @@ test('specify generateOptions to inspectWriteGenerate', async () => {
       }
 
       export interface SchemaObjectTypes {
-        Query: Query;
         Mutation: Mutation;
+        Query: Query;
         Subscription: Subscription;
       }
-      export type SchemaObjectTypesNames = 'Query' | 'Mutation' | 'Subscription';
+      export type SchemaObjectTypesNames = 'Mutation' | 'Query' | 'Subscription';
 
       export interface GeneratedSchema {
         query: Query;
@@ -1006,20 +1011,22 @@ describe('inspect headers', () => {
 
   const secretToken = 'super secret token';
 
-  const { server, isReady } = createTestApp({
-    schema: `
-        type Query {
-            hello: String!
-        }
-        `,
-    resolvers: {
-      Query: {
-        hello() {
-          return 'hello world';
+  const testAppPromise = createTestApp({
+    schema: {
+      typeDefs: `
+      type Query {
+          hello: String!
+      }
+      `,
+      resolvers: {
+        Query: {
+          hello() {
+            return 'hello world';
+          },
         },
       },
     },
-    context: (req, _reply) => {
+    buildContext: ({ req }: BuildContextArgs) => {
       if (req.headers.authorization !== secretToken) {
         throw Error('Unauthorized!');
       }
@@ -1028,12 +1035,9 @@ describe('inspect headers', () => {
   });
 
   beforeAll(async () => {
-    await isReady;
-    endpoint = (await server.listen(0)) + '/graphql';
-  });
+    const testApp = await testAppPromise;
 
-  afterAll(async () => {
-    await server.close();
+    endpoint = testApp.endpoint;
   });
 
   test('specify headers to inspectWriteGenerate', async () => {
@@ -1083,22 +1087,22 @@ describe('inspect headers', () => {
         }
 
         export const scalarsEnumsHash: import('gqty').ScalarsEnumsHash = {
-          String: true,
           Boolean: true,
+          String: true,
         };
         export const generatedSchema = {
-          query: { __typename: { __type: 'String!' }, hello: { __type: 'String!' } },
           mutation: {},
+          query: { __typename: { __type: 'String!' }, hello: { __type: 'String!' } },
           subscription: {},
         } as const;
+
+        export interface Mutation {
+          __typename?: 'Mutation';
+        }
 
         export interface Query {
           __typename?: 'Query';
           hello: ScalarsEnums['String'];
-        }
-
-        export interface Mutation {
-          __typename?: 'Mutation';
         }
 
         export interface Subscription {
@@ -1106,11 +1110,11 @@ describe('inspect headers', () => {
         }
 
         export interface SchemaObjectTypes {
-          Query: Query;
           Mutation: Mutation;
+          Query: Query;
           Subscription: Subscription;
         }
-        export type SchemaObjectTypesNames = 'Query' | 'Mutation' | 'Subscription';
+        export type SchemaObjectTypesNames = 'Mutation' | 'Query' | 'Subscription';
 
         export interface GeneratedSchema {
           query: Query;
@@ -1149,9 +1153,9 @@ describe('inspect headers', () => {
           endpoint,
           destination: tempDir.clientPath,
         })
-      ).rejects.toEqual({
-        message: 'Unauthorized!',
-      });
+      ).rejects.toThrowErrorMatchingInlineSnapshot(
+        `"Could not obtain introspection result, received: {\\"statusCode\\":500,\\"error\\":\\"Internal Server Error\\",\\"message\\":\\"Unauthorized!\\"}"`
+      );
 
       const generatedFileContent = await readFile(tempDir.clientPath, {
         encoding: 'utf-8',
@@ -1195,14 +1199,14 @@ describe('CLI behavior', () => {
 
         import { createReactClient } from '@gqty/react';
 
-        import { createClient, QueryFetcher } from 'gqty';
-        import {
-          generatedSchema,
-          scalarsEnumsHash,
+        import type { QueryFetcher } from 'gqty';
+        import { createClient } from 'gqty';
+        import type {
           GeneratedSchema,
           SchemaObjectTypes,
           SchemaObjectTypesNames,
         } from './schema.generated';
+        import { generatedSchema, scalarsEnumsHash } from './schema.generated';
 
         const queryFetcher: QueryFetcher = async function (query, variables) {
           // Modify \\"/graphql\\" if needed
@@ -1299,22 +1303,22 @@ describe('CLI behavior', () => {
         }
 
         export const scalarsEnumsHash: import('gqty').ScalarsEnumsHash = {
-          String: true,
           Boolean: true,
+          String: true,
         };
         export const generatedSchema = {
-          query: { __typename: { __type: 'String!' }, hello: { __type: 'String!' } },
           mutation: {},
+          query: { __typename: { __type: 'String!' }, hello: { __type: 'String!' } },
           subscription: {},
         } as const;
+
+        export interface Mutation {
+          __typename?: 'Mutation';
+        }
 
         export interface Query {
           __typename?: 'Query';
           hello: ScalarsEnums['String'];
-        }
-
-        export interface Mutation {
-          __typename?: 'Mutation';
         }
 
         export interface Subscription {
@@ -1322,11 +1326,11 @@ describe('CLI behavior', () => {
         }
 
         export interface SchemaObjectTypes {
-          Query: Query;
           Mutation: Mutation;
+          Query: Query;
           Subscription: Subscription;
         }
-        export type SchemaObjectTypesNames = 'Query' | 'Mutation' | 'Subscription';
+        export type SchemaObjectTypesNames = 'Mutation' | 'Query' | 'Subscription';
 
         export interface GeneratedSchema {
           query: Query;

@@ -42,7 +42,6 @@ export function createUseMetaState(client: GQtyClient<any>) {
   const scheduler = client.scheduler;
 
   const {
-    buildSelection,
     accessorCache: { getProxySelection },
   } = client;
 
@@ -58,7 +57,6 @@ export function createUseMetaState(client: GQtyClient<any>) {
       selections: selectionsToFilter,
     } = useBuildSelections(
       opts.filterSelections,
-      buildSelection,
       getProxySelection,
       useMetaState
     );
