@@ -46,8 +46,8 @@
     "@testing-library/jest-dom": "^5.14.1",
     "@types/jest": "^27.0.2",
     "@types/lodash": "^4.14.175",
-    "@vue/composition-api": "^1.2.4",
-    "@vue/test-utils": "^1.2.2",
+    "@vue/compiler-sfc": "^3.2.20",
+    "@vue/test-utils": "^2.0.0-rc.16",
     "bob-esbuild-cli": "^1.0.1",
     "flush-promises": "^1.0.2",
     "get-port": "^5.1.1",
@@ -60,15 +60,14 @@
     "test-utils": "workspace:^0.1.0",
     "tslib": "^2.3.1",
     "typescript": "^4.4.4",
-    "vue": "^2.6.14",
-    "vue-composition-test-utils": "^1.0.3",
-    "vue-template-compiler": "^2.6.14"
+    "vue": "^3.2.16",
+    "vue-composition-test-utils": "^1.0.3"
   },
   "peerDependencies": {
     "@vue/composition-api": "^1.1.0",
     "gqty": "workspace:^2.0.0",
     "graphql": "*",
-    "vue": "^2.6.14 || ^3.0.11"
+    "vue": "^2.6.14 || ^3.2.16"
   },
   "peerDependenciesMeta": {
     "graphql": {
