@@ -1,6 +1,6 @@
 import { GQtyClient, prepass } from 'gqty';
 // import { useMemo, useState } from 'react';
-import type { Ref } from 'vue-demi';
+import type { Ref, ComputedRef } from 'vue-demi';
 
 import {
   OnErrorHandler,
@@ -9,10 +9,11 @@ import {
 } from '../common';
 import type { VueClientOptionsWithDefaults } from '../utils';
 import {
-  // computed,
+  computed,
   getCurrentInstance,
   onUnmounted,
   shallowRef,
+  watch,
 } from 'vue-demi';
 
 export interface UseQueryPrepareHelpers<
@@ -35,13 +36,15 @@ export interface UseQueryOptions<
   prepare?: (helpers: UseQueryPrepareHelpers<GeneratedSchema>) => void;
 }
 
-export type UseQueryReturnValue<GeneratedSchema extends { query: object }> =
-  GeneratedSchema['query'] & {};
+export type UseQueryReturnValue<GeneratedSchema extends { query: object }> = {
+  query: Ref<GeneratedSchema['query']>;
+  isLoading: ComputedRef<boolean>;
+};
 
 export interface UseQuery<GeneratedSchema extends { query: object }> {
-  (options?: UseQueryOptions<GeneratedSchema>): Ref<
-    UseQueryReturnValue<GeneratedSchema>
-  >;
+  (
+    options?: UseQueryOptions<GeneratedSchema>
+  ): UseQueryReturnValue<GeneratedSchema>;
 }
 
 export function createUseQuery<
@@ -70,10 +73,8 @@ export function createUseQuery<
     staleWhileRevalidate = defaultStaleWhileRevalidate,
     onError,
     prepare,
-  }: UseQueryOptions<GeneratedSchema> = {}): Ref<
-    UseQueryReturnValue<GeneratedSchema>
-  > {
-    const { unsubscribe } = useInterceptSelections({
+  }: UseQueryOptions<GeneratedSchema> = {}): UseQueryReturnValue<GeneratedSchema> {
+    const { fetchingPromise, unsubscribe } = useInterceptSelections({
       staleWhileRevalidate,
       eventHandler,
       interceptorManager,
@@ -96,6 +97,10 @@ export function createUseQuery<
       }
     }
 
+    watch(query, (val) => {
+      console.log('trigger update: ', JSON.stringify(val));
+    });
+
     onUnmounted(() => {
       const instance = getCurrentInstance();
       if (instance) {
@@ -103,7 +108,12 @@ export function createUseQuery<
       }
     });
 
-    return query;
+    const isLoading = computed(() => fetchingPromise.value !== null);
+
+    return {
+      query,
+      isLoading,
+    };
   };
 
   return useQuery;

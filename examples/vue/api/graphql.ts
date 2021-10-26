@@ -28,6 +28,7 @@ export const {
   buildApp,
 } = CreateApp({
   path: '/api/graphql',
+  cors: true,
   ez: {
     plugins: [
       ezAltairIDE(),

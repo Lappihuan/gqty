@@ -173,7 +173,7 @@ export interface VueClient<
   // usePaginatedQuery: UsePaginatedQuery<GeneratedSchema>;
   useMutation: UseMutation<GeneratedSchema>;
   // graphql: GraphQLHOC;
-  state: { isLoading: boolean };
+  // state: { isLoading: boolean };
   // prepareReactRender: PrepareReactRender;
   // useHydrateCache: UseHydrateCache;
   useMetaState: UseMetaState;
@@ -226,18 +226,18 @@ export function createVueClient<
     defaults,
   });
 
-  const state = new Proxy(
-    {
-      isLoading: false,
-    },
-    {
-      get(target, key, receiver) {
-        if (key === 'isLoading') return Boolean(client.scheduler.resolving);
-
-        return Reflect.get(target, key, receiver);
-      },
-    }
-  );
+  // const state = new Proxy(
+  //   {
+  //     isLoading: false,
+  //   },
+  //   {
+  //     get(target, key, receiver) {
+  //       if (key === 'isLoading') return Boolean(client.scheduler.resolving);
+  //
+  //       return Reflect.get(target, key, receiver);
+  //     },
+  //   }
+  // );
 
   // const { prepareReactRender, useHydrateCache } = createSSRHelpers(
   //   client,
@@ -255,10 +255,9 @@ export function createVueClient<
     // usePaginatedQuery: createUsePaginatedQuery<GeneratedSchema>(client, opts),
     useMutation: createUseMutation<GeneratedSchema>(client, opts),
     // graphql: createGraphqlHOC(client, opts),
-    state,
+    // state,
     // prepareReactRender,
     // useHydrateCache,
-    // @ts-ignore
     useMetaState: createUseMetaState(client),
     // useSubscription: createUseSubscription<GeneratedSchema>(client, opts),
     // prepareQuery: createPrepareQuery<GeneratedSchema>(client, opts),

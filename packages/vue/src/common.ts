@@ -300,7 +300,6 @@ export function useSubscribeCacheChanges({
   let onChangeCalled = false;
 
   if (!shouldSubscribe) return;
-
   const unsubscribeFetch = eventHandler.onFetchSubscribe(
     (fetchPromise, promiseSelections) => {
       if (
@@ -321,7 +320,6 @@ export function useSubscribeCacheChanges({
       );
     }
   );
-
   const unsubscribeCache = eventHandler.onCacheChangeSubscribe(
     ({ selection }) => {
       if (!onChangeCalled && hookSelections.value.has(selection)) {
@@ -380,7 +378,6 @@ export function useInterceptSelections({
   const cacheRefetchSelections = enabledStaleWhileRevalidate
     ? new Set<Selection>()
     : null;
-
   interceptor.selectionCacheRefetchListeners.add((selection) => {
     if (cacheRefetchSelections) cacheRefetchSelections.add(selection);
 
@@ -392,7 +389,6 @@ export function useInterceptSelections({
       globalInterceptor.addSelectionCacheRefetch(selection);
     }
   }
-
   interceptor.selectionAddListeners.add((selection) => {
     hookSelections.value.add(selection);
   });
@@ -407,18 +403,6 @@ export function useInterceptSelections({
     deferredCall.value();
     deferredCall.value = null;
   }
-
-  //TODO: fix condition, shouldn't be inside funciton, probably just get rid of function
-  const onUpdate = () => {
-    console.log('beforeTrigger promise:', fetchingPromise.value);
-    console.log('beforeTrigger:', query);
-    if (!fetchingPromise.value) {
-      triggerRef(query);
-    }
-    console.log('afterTrigger promise:', fetchingPromise.value);
-    console.log('afterTrigger:', query);
-  };
-
   // const isRendering = useIsRendering();
 
   const unsubscribeResolve = scheduler.subscribeResolve(
@@ -432,9 +416,9 @@ export function useInterceptSelections({
           promise.then(({ error }) => {
             fetchingPromise.value = null;
             if (error && onError) onError(error);
-
-            Promise.resolve().then(onUpdate);
-
+            Promise.resolve().then(() => () => {
+              triggerRef(query);
+            });
             resolve();
           });
         });
@@ -443,10 +427,10 @@ export function useInterceptSelections({
 
         if (updateOnFetchPromise) {
           if (enabledStaleWhileRevalidate) {
-            deferredCall.value = onUpdate;
+            deferredCall.value = () => triggerRef(query);
           } else {
             deferredCall.value = null;
-            onUpdate();
+            triggerRef(query);
           }
         }
       }
@@ -464,7 +448,7 @@ export function useInterceptSelections({
     hookSelections,
     eventHandler,
     onChange() {
-      if (!fetchingPromise.value) onUpdate();
+      if (!fetchingPromise.value) triggerRef(query);
     },
   });
 

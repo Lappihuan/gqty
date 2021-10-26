@@ -1,52 +1,33 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useQuery } from '../graphql/gqty';
+import useTestComposable from '../testComposable';
+const test = ref({ test: 'test' });
+const { query, isLoading } = useQuery();
 
-defineProps<{ msg: string }>();
+const { bla, myCrazyObjectRef, testLoading } = useTestComposable(false);
 
-const count = ref(0);
+const log = (message: any) => {
+  console.log(message);
+};
 </script>
 
 <template>
-  <h1>{{ msg }}</h1>
+  <span v-if="testLoading">Loading....</span>
+  <span v-else>Not Loading</span>
+  {{ query.dogs }}
+  {{ log(query) }}
+  {{ log(isLoading) }}
+  {{ log(test) }}
 
-  <p>
-    Recommended IDE setup:
-    <a href="https://code.visualstudio.com/" target="_blank">VSCode</a>
-    +
-    <a href="https://github.com/johnsoncodehk/volar" target="_blank">Volar</a>
-  </p>
+  {{ log(bla) }}
+  {{ log(myCrazyObjectRef) }}
+  {{ log(testLoading) }}
 
-  <p>See <code>README.md</code> for more information.</p>
+  {{ myCrazyObjectRef }}
 
-  <p>
-    <a href="https://vitejs.dev/guide/features.html" target="_blank">
-      Vite Docs
-    </a>
-    |
-    <a href="https://v3.vuejs.org/" target="_blank">Vue 3 Docs</a>
-  </p>
-
-  <button type="button" @click="count++">count is: {{ count }}</button>
-  <p>
-    Edit
-    <code>components/HelloWorld.vue</code> to test hot module replacement.
-  </p>
+  <div v-for="dog in query.value.dogs" :key="dog.id">
+    {{ dog.name + ' tessssssssst' }}
+  </div>
+  <!--  <span>{{ // test }}</span>-->
 </template>
-
-<style scoped>
-a {
-  color: #42b983;
-}
-
-label {
-  margin: 0 0.5em;
-  font-weight: bold;
-}
-
-code {
-  background-color: #eee;
-  padding: 2px 4px;
-  border-radius: 4px;
-  color: #304455;
-}
-</style>
