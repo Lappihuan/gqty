@@ -1,6 +1,7 @@
 // import { renderHook } from '@testing-library/vue';
 import { mountComposition, nextTick } from 'vue-composition-test-utils';
-import flushPromises from 'flush-promises';
+// import flushPromises from 'flush-promises';
+import { flushPromises } from '@vue/test-utils';
 
 import { sleep, createVueTestClient } from './utils';
 
@@ -13,20 +14,20 @@ test('Basic Non-Suspense', async () => {
     },
   });
 
-  console.log(result.current.value);
+  console.log(result.current?.query.value.hello);
 
-  expect(result.current.value.hello).toBe(undefined);
+  expect(result.current?.query.value.hello).toBe(undefined);
 
   // await waitFor(() => result.current.$state.isLoading === true);
   await flushPromises();
 
-  expect(result.current.value.hello).toBe(undefined);
+  expect(result.current?.query.value.hello).toBe(undefined);
 
   // await waitFor(() => result.current.$state.isLoading === false);
   await flushPromises();
-  await sleep(4);
+  // await sleep(4);
 
-  expect(result.current.value.hello).toBe('hello world');
+  expect(result.current?.query.value.hello).toBe('hello world');
 });
 
 // test('Basic Suspense', async () => {

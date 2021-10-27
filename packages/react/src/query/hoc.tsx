@@ -73,7 +73,6 @@ export function createGraphqlHOC(
           </>
         );
         if (typeof suspense === 'object') {
-          // @ts-ignore
           return <Suspense fallback={suspense.fallback} children={value} />;
         }
         return value;
